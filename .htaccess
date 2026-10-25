@@ -1,0 +1,86 @@
+# ==========================================================
+#  Root .htaccess - Keamanan Utama Aplikasi Presensi
+#  Server  : Apache (XAMPP / cPanel / Shared Hosting)
+# ==========================================================
+
+# ---------- 1. Matikan Directory Listing ----------
+Options -Indexes
+DirectoryIndex index.php index.html
+
+# ---------- 2. Proteksi File Sensitif ----------
+# Cegah akses langsung dari browser ke folder/data sensitif
+<FilesMatch "^(\.env|\.gitignore|\.git|composer\.(json|lock)|package(-lock)?\.json|README\.md|database\.sql|Dockerfile|docker-compose\.yml)$">
+    Require all denied
+</FilesMatch>
+
+# Blokir file backup & konfigurasi umum
+<FilesMatch "\.(sql|log|ini|sh|bak|old|swp|dist|fla|md)$">
+    Require all denied
+</FilesMatch>
+
+# Folder internal dan metadata VCS tidak boleh dilayani web
+RedirectMatch 404 ^/(\.git|vendor|node_modules|packages)(/|$)
+
+# Blokir akses ke folder internal dari sisi web
+RedirectMatch 404 ^/(config|api/v1/config)(/|$)
+
+# ---------- 3. Redirect ke HTTPS ----------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Aktifkan hanya jika situs sudah memakai sertifikat SSL
+    # (hapus tanda # di bawah untuk menyalakan)
+    # RewriteCond %{HTTPS} !=on
+    # RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Paksa trailing slash agar path API konsisten
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# ---------- 4. Hardening PHP ----------
+<IfModule mod_php.c>
+    php_flag display_errors off
+    php_flag log_errors on
+    php_flag allow_url_include off
+    php_value upload_max_filesize 8M
+    php_value post_max_size 10M
+</IfModule>
+
+# ---------- 5. Keamanan lewat HTTP Header ----------
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(self), camera=(self), microphone=()"
+    Header always unset X-Powered-By
+</IfModule>
+
+# ---------- 6. Kompresi & Cache Aset ----------
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript
+    AddOutputFilterByType DEFLATE application/javascript application/json
+    AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css                 "access plus 1 year"
+    ExpiresByType application/javascript   "access plus 1 year"
+    ExpiresByType image/jpeg               "access plus 6 months"
+    ExpiresByType image/png                "access plus 6 months"
+    ExpiresByType image/webp               "access plus 6 months"
+    ExpiresByType application/json         "access plus 1 year"
+    ExpiresByType application/octet-stream "access plus 1 year"
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(bin|json|js|css)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+
+# ---------- 7. Batasi Ukuran Body Request ----------
+LimitRequestBody 10485760

@@ -1,0 +1,44 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+credentials/
+
+# Database
+database/*.sqlite
+database/*.sqlite-journal
+database/*.sqlite-wal
+database/*.sqlite-shm
+
+# Uploads
+uploads/*
+!uploads/README.md
+
+# Node
+node_modules/
+package-lock.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+open-agent-hack/.venv/
+open-agent-hack/__pycache__/
+open-agent-hack/agent/__pycache__/
+open-agent-hack/logs/run.jsonl
+
+# Nested repo (published separately)
+open-agent-hack/
+
+# Large/scratch
+scratch/
+*.xlsx
+*.zip
+*.pdf
+
+# OS
+Thumbs.db
+.DS_Store

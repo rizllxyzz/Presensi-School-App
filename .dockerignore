@@ -1,0 +1,9 @@
+.git
+.env
+*.sqlite
+*.sqlite-*
+.env
+Dockerfile
+.dockerignore
+README.md
+uploads/*

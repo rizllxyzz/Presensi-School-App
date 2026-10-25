@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AbsensiKu — Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<style>
+  :root{
+    --bg:#f4f5f7;
+    --surface:#ffffff;
+    --text:#0b1120;
+    --muted:#6b7280;
+    --line:#e9ebef;
+    --primary:#4f46e5;
+    --primary-soft:#eef2ff;
+    --emerald:#059669;
+    --amber:#d97706;
+    --rose:#e11d48;
+  }
+  *{font-family:'Plus Jakarta Sans',system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+  html,body{background:var(--bg);color:var(--text)}
+  body{
+    background:
+      radial-gradient(800px 500px at 100% 0%, rgba(79,70,229,.06), transparent 60%),
+      radial-gradient(700px 500px at 0% 100%, rgba(5,150,105,.05), transparent 60%),
+      var(--bg);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  /* Cards */
+  .card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:20px;
+    box-shadow:0 1px 2px rgba(16,24,40,.04);
+    transition:all .25s ease;
+  }
+  .card-hover:hover{
+    transform:translateY(-2px);
+    box-shadow:0 12px 28px -12px rgba(16,24,40,.12);
+    border-color:#dcdfe5;
+  }
+
+  /* Hero gradient card */
+  .hero{
+    background:
+      radial-gradient(600px 300px at 0% 0%, rgba(99,102,241,.18), transparent 55%),
+      radial-gradient(500px 280px at 100% 100%, rgba(16,185,129,.18), transparent 55%),
+      linear-gradient(180deg,#ffffff,#fbfbfd);
+    border:1px solid #ece9f5;
+    box-shadow:0 1px 2px rgba(16,24,40,.04), 0 20px 50px -25px rgba(79,70,229,.18);
+  }
+
+  .chip{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:600;
+    color:#374151;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+
+  /* Stats pills */
+  .stat-dot{width:8px;height:8px;border-radius:99px;display:inline-block}
+
+  /* Quick action tile */
+  .qa{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:14px 10px;
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    transition:all .2s ease;
+    position:relative;overflow:hidden;
+  }
+  .qa:hover{transform:translateY(-2px);border-color:#c7cdd8;box-shadow:0 10px 22px -12px rgba(16,24,40,.15)}
+  .qa:active{transform:scale(.97)}
+  .qa-ic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px}
+
+  /* Schedule item */
+  .row{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:14px;
+    display:flex;align-items:center;gap:14px;
+    transition:all .2s ease;
+  }
+  .row:hover{border-color:#dcdfe5;box-shadow:0 6px 18px -10px rgba(16,24,40,.1)}
+  .row.active{
+    border-color:rgba(5,150,105,.4);
+    background:linear-gradient(180deg,#ecfdf5,#ffffff);
+    box-shadow:0 0 0 3px rgba(5,150,105,.08), 0 10px 24px -12px rgba(5,150,105,.18);
+  }
+
+  .badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;letter-spacing:.02em}
+  .b-hadir{background:#ecfdf5;color:#059669;border:1px solid #a7f3d0}
+  .b-late{background:#fffbeb;color:#d97706;border:1px solid #fde68a}
+  .b-wait{background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb}
+  .b-live{background:#059669;color:#fff;display:inline-flex;align-items:center;gap:5px}
+  .b-live::before{content:'';width:6px;height:6px;border-radius:99px;background:#fff;animation:blink 1.2s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+  /* Progress ring */
+  .ring{transform:rotate(-90deg)}
+  .ring circle{transition:stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1)}
+
+  /* Bottom nav: iOS Segmented Pill + Right Circular Camera FAB */
+  .botbar {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    z-index: 50;
+    width: min(460px, calc(100% - 24px));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    pointer-events: none;
+  }
+  .pill-nav {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    height: 58px;
+    background: rgba(235, 236, 240, 0.84);
+    backdrop-filter: saturate(180%) blur(28px);
+    -webkit-backdrop-filter: saturate(180%) blur(28px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 999px;
+    box-shadow:
+      0 14px 34px -8px rgba(0, 0, 0, 0.09),
+      0 3px 10px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    padding: 5px;
+    overflow: visible;
+    pointer-events: all;
+  }
+  .pill-nav__indicator {
+    position: absolute;
+    top: 5px;
+    bottom: 5px;
+    left: 5px;
+    width: 40px;
+    background: #ffffff;
+    border-radius: 999px;
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.12),
+      0 1px 3px rgba(0, 0, 0, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 1);
+    transition:
+      left .34s cubic-bezier(0.2, 0.9, 0.3, 1),
+      width .34s cubic-bezier(0.2, 0.9, 0.3, 1);
+    z-index: 0;
+    pointer-events: none;
+  }
+  .pill-tab {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 4px 2px 5px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #8e8e93;
+    text-decoration: none;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 999px;
+    transition: color .2s ease, transform .16s ease;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .pill-tab svg {
+    width: 20px;
+    height: 20px;
+    color: #8e8e93;
+    transition: transform .2s cubic-bezier(.34,1.3,.5,1), color .2s ease;
+  }
+  .pill-tab.is-active {
+    color: #000000;
+    font-weight: 700;
+  }
+  .pill-tab.is-active svg {
+    color: #000000;
+    stroke-width: 2.3;
+    transform: translateY(-0.5px) scale(1.05);
+  }
+  .pill-tab:hover:not(.is-active) {
+    color: #3a3a3c;
+  }
+  .pill-tab:active {
+    transform: scale(.93);
+  }
+
+  .cam-fab {
+    position: relative;
+    flex-shrink: 0;
+    width: 58px;
+    height: 58px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: saturate(180%) blur(28px);
+    -webkit-backdrop-filter: saturate(180%) blur(28px);
+    color: #1c1c1e;
+    display: grid;
+    place-items: center;
+    text-decoration: none;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow:
+      0 14px 34px -8px rgba(0, 0, 0, 0.11),
+      0 3px 10px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 1);
+    pointer-events: all;
+    cursor: pointer;
+    transition:
+      transform .22s cubic-bezier(.34, 1.3, .5, 1),
+      box-shadow .22s ease,
+      background .2s ease;
+  }
+  .cam-fab svg {
+    width: 22px;
+    height: 22px;
+    color: #1c1c1e;
+    stroke-width: 2.2;
+    transition: transform .22s cubic-bezier(.34,1.3,.5,1), color .2s ease;
+  }
+  .cam-fab:hover {
+    transform: scale(1.06) translateY(-2px);
+    background: #ffffff;
+    color: #000000;
+    box-shadow:
+      0 14px 32px -6px rgba(0, 0, 0, 0.14),
+      0 4px 10px rgba(0, 0, 0, 0.06);
+  }
+  .cam-fab:active {
+    transform: scale(.93);
+  }
+  .cam-fab__ring {
+    position: absolute;
+    inset: -3.5px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(0, 0, 0, 0.08);
+    animation: camPulse 2.8s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes camPulse {
+    0%, 100% { opacity: .6; transform: scale(1);    }
+    50%       { opacity: 0;  transform: scale(1.16); }
+  }
+    border:3px solid #fff;
+    margin:0 4px;
+    transition:transform .2s;
+  }
+  .scan-fab:hover{transform:translateY(-2px) scale(1.04)}
+  .scan-fab:active{transform:scale(.94)}
+
+  /* Toast */
+  .toast{
+    position:fixed;left:50%;bottom:96px;transform:translate(-50%,12px);
+    padding:12px 18px;border-radius:14px;
+    background:#0b1120;color:#fff;font-size:13px;font-weight:600;
+    box-shadow:0 16px 36px -12px rgba(0,0,0,.4);
+    opacity:0;pointer-events:none;transition:all .3s;z-index:60;
+    display:flex;align-items:center;gap:10px;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  /* fade in */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .fade{animation:fadeUp .5s ease both}
+  .d1{animation-delay:.05s}.d2{animation-delay:.12s}.d3{animation-delay:.18s}.d4{animation-delay:.24s}.d5{animation-delay:.3s}
+
+  /* scrollbar */
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:99px}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  /* mobile bottom padding */
+  @media(max-width:640px){
+    .nav-wrap{bottom:14px}
+    body{padding-bottom:0}
+  }
+</style>
+</head>
+<body class="pb-32">
+
+<!-- Top Dashboard Header (Sketch) -->
+<header class="max-w-3xl mx-auto px-5 pt-6 flex items-center justify-between fade">
+  <div>
+    <h1 class="text-[28px] font-black tracking-tight text-gray-900 leading-none">Dashboard</h1>
+  </div>
+  <div class="flex items-center gap-2.5">
+    <button class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-700 hover:text-indigo-600 hover:border-indigo-300 transition shadow-sm relative" aria-label="Notifikasi">
+      <i class="fa-regular fa-bell text-[16px]"></i>
+      <span class="absolute top-2 right-2.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white"></span>
+    </button>
+    <button class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-700 hover:text-indigo-600 hover:border-indigo-300 transition shadow-sm" aria-label="Profil Akun">
+      <i class="fa-regular fa-user text-[15px]"></i>
+    </button>
+  </div>
+</header>
+
+<main class="max-w-3xl mx-auto px-5">
+
+  <!-- Search Bar (Sketch: Pill Search Input) -->
+  <div class="mt-4 flex items-center bg-white border border-gray-200 rounded-full px-4 h-12 shadow-sm focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-100 transition fade d1">
+    <i class="fa-solid fa-magnifying-glass text-gray-400 text-sm mr-3"></i>
+    <input type="text" placeholder="Cari menu, riwayat, atau perizinan..." class="w-full bg-transparent text-[13.5px] text-gray-800 placeholder-gray-400 outline-none" />
+  </div>
+
+  <!-- Hero greeting (Sketch: 2-Column Split) -->
+  <section class="fade d2 hero rounded-3xl p-6 mt-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+      <div class="flex-1">
+        <p class="text-gray-500 text-sm font-semibold flex items-center gap-1.5"><i class="fa-solid fa-moon text-indigo-500"></i> Selamat malam,</p>
+        <h2 class="text-[24px] font-extrabold mt-1 tracking-tight text-gray-900">Rangga Pratama <span class="inline-block">👋</span></h2>
+        
+        <!-- 2 Column Grid from Sketch -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-4 pt-3.5 border-t border-gray-100">
+          <!-- Kiri: Hari & Username -->
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2 text-[13px] font-bold text-gray-800">
+              <i class="fa-regular fa-calendar-check text-indigo-600"></i>
+              <span>Selasa, 29 September 2026</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              <span class="chip text-xs"><i class="fa-solid fa-user-tag text-indigo-500"></i>@ranggapratama</span>
+              <span class="chip text-xs bg-emerald-50 border-emerald-200 text-emerald-700"><i class="fa-solid fa-circle-check text-emerald-500"></i>Face ID Aktif</span>
+            </div>
+          </div>
+
+          <!-- Kanan: Lokasi & Status -->
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2 text-[13px] font-bold text-gray-800">
+              <i class="fa-solid fa-location-dot text-emerald-600"></i>
+              <span>SMKN 1 Tanjung · XII RPL 1</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              <span class="chip text-xs bg-sky-50 border-sky-200 text-sky-700"><i class="fa-regular fa-clock text-sky-500"></i>Masuk: 06:45 WIB</span>
+              <span class="chip text-xs bg-emerald-50 border-emerald-200 text-emerald-700"><i class="fa-solid fa-chart-pie text-emerald-500"></i>96% Hadir</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ring progress -->
+      <div class="flex items-center gap-4 sm:gap-5 shrink-0">
+        <div class="relative w-24 h-24">
+          <svg class="ring w-full h-full" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="44" fill="none" stroke="#eef2ff" stroke-width="8"/>
+            <circle id="ring" cx="50" cy="50" r="44" fill="none" stroke="url(#g)" stroke-width="8" stroke-linecap="round"
+              stroke-dasharray="276.5" stroke-dashoffset="276.5"/>
+            <defs>
+              <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#4f46e5"/>
+                <stop offset="100%" stop-color="#10b981"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-[22px] font-extrabold leading-none" id="percent">0%</span>
+            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-wider mt-1">Kehadiran</span>
+          </div>
+        </div>
+        <div class="space-y-2.5">
+          <div class="flex items-center gap-2 text-[13px]">
+            <span class="stat-dot bg-emerald-500"></span><span class="text-gray-500">Hadir</span><span class="font-bold">96</span>
+          </div>
+          <div class="flex items-center gap-2 text-[13px]">
+            <span class="stat-dot bg-amber-500"></span><span class="text-gray-500">Terlambat</span><span class="font-bold">3</span>
+          </div>
+          <div class="flex items-center gap-2 text-[13px]">
+            <span class="stat-dot bg-rose-500"></span><span class="text-gray-500">Izin</span><span class="font-bold">1</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick actions -->
+  <section class="fade d2 mt-5">
+    <div class="grid grid-cols-4 gap-3">
+      <button class="qa" data-action="Absen masuk berhasil dicatat">
+        <div class="qa-ic" style="background:#eef2ff;color:#4f46e5"><i class="fa-solid fa-right-to-bracket"></i></div>
+        <span class="text-[11px] font-bold text-gray-700">Absen Masuk</span>
+      </button>
+      <button class="qa" data-action="Form izin dibuka — kirim ke wali kelas">
+        <div class="qa-ic" style="background:#fffbeb;color:#d97706"><i class="fa-solid fa-envelope-open-text"></i></div>
+        <span class="text-[11px] font-bold text-gray-700">Izin / Sakit</span>
+      </button>
+      <button class="qa" data-action="Jadwal pelajaran dibuka">
+        <div class="qa-ic" style="background:#ecfdf5;color:#059669"><i class="fa-solid fa-calendar-days"></i></div>
+        <span class="text-[11px] font-bold text-gray-700">Jadwal</span>
+      </button>
+      <button class="qa" data-action="Riwayat absensi dimuat">
+        <div class="qa-ic" style="background:#f5f3ff;color:#7c3aed"><i class="fa-solid fa-clock-rotate-left"></i></div>
+        <span class="text-[11px] font-bold text-gray-700">Riwayat</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Today schedule -->
+  <section class="fade d3 mt-6">
+    <div class="flex items-end justify-between mb-3">
+      <div>
+        <h3 class="font-extrabold text-[17px] tracking-tight">Jadwal Hari Ini</h3>
+        <p class="text-[12px] text-gray-500 mt-0.5">Senin · 5 sesi pembelajaran</p>
+      </div>
+      <button class="text-[12px] text-indigo-600 font-bold hover:text-indigo-700 transition">Lihat semua <i class="fa-solid fa-chevron-right ml-0.5 text-[10px]"></i></button>
+    </div>
+
+    <div class="space-y-2.5">
+      <!-- Upacara -->
+      <div class="row">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center bg-indigo-50 text-indigo-600 shrink-0">
+          <i class="fa-solid fa-flag"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h4 class="font-bold text-[14px] truncate">Upacara Bendera</h4>
+          <p class="text-[11.5px] text-gray-500 mt-0.5">07:00 - 07:30 · Lapangan Utama</p>
+        </div>
+        <span class="badge b-hadir"><i class="fa-solid fa-check mr-1"></i>Hadir</span>
+      </div>
+
+      <!-- Matematika - live -->
+      <div class="row active">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-600 shrink-0">
+          <i class="fa-solid fa-square-root-variable"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h4 class="font-bold text-[14px] truncate">Matematika</h4>
+            <span class="badge b-live">Live</span>
+          </div>
+          <p class="text-[11.5px] text-gray-500 mt-0.5">07:30 - 09:00 · Bu Sari Dewi · R. 9A</p>
+          <div class="mt-2 h-1.5 w-full rounded-full bg-emerald-100 overflow-hidden">
+            <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-500" style="width:42%"></div>
+          </div>
+        </div>
+        <span class="badge b-hadir"><i class="fa-solid fa-check mr-1"></i>Hadir</span>
+      </div>
+
+      <!-- B. Indonesia -->
+      <div class="row">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center bg-amber-50 text-amber-600 shrink-0">
+          <i class="fa-solid fa-book"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h4 class="font-bold text-[14px] truncate">Bahasa Indonesia</h4>
+          <p class="text-[11.5px] text-gray-500 mt-0.5">09:15 - 10:45 · Pak Hendra · R. 9A</p>
+        </div>
+        <span class="badge b-wait"><i class="fa-regular fa-clock mr-1"></i>Menunggu</span>
+      </div>
+
+      <!-- IPA -->
+      <div class="row">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center bg-rose-50 text-rose-600 shrink-0">
+          <i class="fa-solid fa-flask"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h4 class="font-bold text-[14px] truncate">IPA Terpadu</h4>
+          <p class="text-[11.5px] text-gray-500 mt-0.5">11:00 - 12:30 · Bu Lestari · Lab IPA</p>
+        </div>
+        <span class="badge b-wait"><i class="fa-regular fa-clock mr-1"></i>Menunggu</span>
+      </div>
+
+      <!-- Agama -->
+      <div class="row">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center bg-violet-50 text-violet-600 shrink-0">
+          <i class="fa-solid fa-mosque"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h4 class="font-bold text-[14px] truncate">Agama Islam</h4>
+          <p class="text-[11.5px] text-gray-500 mt-0.5">13:30 - 15:00 · Pak Yusuf · R. 9B</p>
+        </div>
+        <span class="badge b-wait"><i class="fa-regular fa-clock mr-1"></i>Menunggu</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="fade d4 mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div class="card card-hover p-4">
+      <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="fa-solid fa-calendar-check"></i></div>
+      <p class="text-[22px] font-extrabold mt-3 leading-none">96</p>
+      <p class="text-[11.5px] text-gray-500 mt-1.5">Total Hadir</p>
+    </div>
+    <div class="card card-hover p-4">
+      <div class="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <p class="text-[22px] font-extrabold mt-3 leading-none">3</p>
+      <p class="text-[11.5px] text-gray-500 mt-1.5">Terlambat</p>
+    </div>
+    <div class="card card-hover p-4">
+      <div class="w-9 h-9 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center"><i class="fa-solid fa-bed"></i></div>
+      <p class="text-[22px] font-extrabold mt-3 leading-none">1</p>
+      <p class="text-[11.5px] text-gray-500 mt-1.5">Izin / Sakit</p>
+    </div>
+    <div class="card card-hover p-4">
+      <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-medal"></i></div>
+      <p class="text-[22px] font-extrabold mt-3 leading-none">96%</p>
+      <p class="text-[11.5px] text-gray-500 mt-1.5">Rate Kehadiran</p>
+    </div>
+  </section>
+
+  <!-- Tip -->
+  <section class="fade d5 mt-5 card p-5 flex items-start gap-4" style="background:linear-gradient(135deg,#eef2ff,#ecfdf5)">
+    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background:linear-gradient(135deg,#4f46e5,#10b981)">
+      <i class="fa-solid fa-lightbulb text-white text-sm"></i>
+    </div>
+    <div class="flex-1">
+      <h4 class="font-extrabold text-[14px]">Tips Hari Ini</h4>
+      <p class="text-[12.5px] text-gray-600 mt-1 leading-relaxed">Lakukan absen masuk sebelum pukul 07:00 WIB. Keterlambatan otomatis tercatat dan muncul di rekap bulanan orang tua.</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ BOTTOM NAV: pill-group (kiri) + FAB kamera (kanan) ============ -->
+<div class="botbar" id="botbar" aria-label="Navigasi cepat">
+<!-- Kiri: pill grup menu -->
+  <div class="pill-nav" id="pillNav">
+    <span class="pill-nav__indicator" id="pillIndicator"></span>
+
+    <button class="pill-tab is-active" data-nav="Home" aria-label="Beranda">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 20v-9.5z"/><path d="M9 21v-6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 15v6"/></svg>
+      <span>Beranda</span>
+    </button>
+    <button class="pill-tab" data-nav="Riwayat" aria-label="Riwayat">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
+      <span>Riwayat</span>
+    </button>
+    <button class="pill-tab" data-nav="Izin" aria-label="Izin / Sakit">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Izin</span>
+    </button>
+    <button class="pill-tab" data-nav="Statistik" aria-label="Statistik">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Statistik</span>
+    </button>
+  </div>
+
+<!-- Kanan: FAB Kamera (bulat, SVG) -->
+  <button class="cam-fab" id="scanBtn" aria-label="Scan presensi">
+    <span class="cam-fab__ring"></span>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8 a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
+  </button>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast">
+  <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+  <span id="toastMsg">Berhasil</span>
+</div>
+
+<script>
+  // Live clock
+  function updateClock(){
+    const n = new Date();
+    document.getElementById('clock').textContent =
+      String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  }
+  updateClock();
+  setInterval(updateClock, 30000);
+
+  // Animate ring on load
+  window.addEventListener('load', () => {
+    const ring = document.getElementById('ring');
+    const percent = document.getElementById('percent');
+    const target = 96;
+    const c = 2 * Math.PI * 44;
+    ring.style.strokeDasharray = c;
+    setTimeout(() => {
+      ring.style.strokeDashoffset = c - (c * target / 100);
+      let cur = 0;
+      const t = setInterval(() => {
+        cur += 2;
+        if(cur >= target){ cur = target; clearInterval(t); }
+        percent.textContent = cur + '%';
+      }, 22);
+    }, 250);
+
+    // Init pill position
+    movePill(document.querySelector('.pill-tab.is-active'));
+  });
+
+  // Quick actions
+  document.querySelectorAll('.qa').forEach(btn => {
+    btn.addEventListener('click', () => showToast(btn.dataset.action, 'check'));
+  });
+
+  // Nav pill sliding (Apple segmented control)
+  const navTabs = document.querySelectorAll('.pill-tab');
+  const pillInd = document.getElementById('pillIndicator');
+  const pillNav = document.getElementById('pillNav');
+
+  function movePill(item){
+    if(!item || !pillNav || !pillInd) return;
+    const barRect = pillNav.getBoundingClientRect();
+    const r = item.getBoundingClientRect();
+    pillInd.style.left = (r.left - barRect.left) + 'px';
+    pillInd.style.width = r.width + 'px';
+  }
+
+  navTabs.forEach(item => {
+    item.addEventListener('click', () => {
+      navTabs.forEach(n => n.classList.remove('is-active'));
+      item.classList.add('is-active');
+      movePill(item);
+      if(item.dataset.nav !== 'Home'){
+        showToast('Membuka halaman ' + item.dataset.nav, 'arrow');
+      }
+    });
+  });
+
+  // Recalculate pill on resize / orientation
+  window.addEventListener('resize', () => {
+    const active = document.querySelector('.pill-tab.is-active');
+    if(active) movePill(active);
+  });
+
+  // Scan FAB
+  document.getElementById('scanBtn').addEventListener('click', () => {
+    showToast('Kamera dibuka — arahkan ke QR code di kelas', 'scan');
+  });
+
+  // Toast
+  let toastTimer;
+  function showToast(msg, type='check'){
+    const t = document.getElementById('toast');
+    const i = document.getElementById('toastIcon');
+    document.getElementById('toastMsg').textContent = msg;
+    i.className = type === 'scan' ? 'fa-solid fa-camera text-indigo-400'
+      : type === 'arrow' ? 'fa-solid fa-arrow-right text-indigo-400'
+      : 'fa-solid fa-circle-check text-emerald-400';
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+</script>
+</body>
+</html>

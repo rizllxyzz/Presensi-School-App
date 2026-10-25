@@ -1,332 +1,145 @@
-# Sistem Presensi Sekolah — Face Recognition + GPS
+# Presensi School - Smart Attendance System
 
-> **Dokumen ini adalah briefing untuk AI dan developer manusia.**
-> Jika kamu adalah AI (Gemini, Claude, atau lainnya) yang diminta mengubah kode
-> di repo ini: **baca dokumen ini dan `README.md` di folder yang kamu ubah
-> sampai habis SEBELUM menulis satu baris kode pun.** Bagian
-> [ATURAN KERAS](#aturan-keras-tidak-boleh-dilanggar) mengikat dan tidak
-> bisa dikompromikan demi sekadar membuat kode berjalan.
+A school attendance (presensi) web app with Face ID, GPS verification, and an
+AI assistant (SmartJournal AI) powered by **Zetaris** and **Meterless Nightshift**.
 
----
+> Open-source. Feel free to fork, modify, and contribute.
 
-## 1. Konsep yang ingin dicapai
+## Tech Stack
+- PHP 8.3 + MySQL (Laragon/XAMPP)
+- Zetaris Data Virtualization (data layer)
+- Meterless Nightshift (primary AI provider)
+- Python agent (see [Attendance-Agent](https://github.com/rizllxyzz/Attendance-Agent))
 
-Sistem absensi siswa untuk sekolah. Setiap pagi dan sore, siswa memindai
-wajahnya sendiri di gerbang sekolah, lalu sistem mencatat kehadiran **hanya
-jika semua ini benar sekaligus**:
+## Quick Start (Local)
 
-| Syarat | Kenapa ada |
-|---|---|
-| Wajahnya terdaftar | Absen harus milik orang yang benar |
-| Sedang **masih hidup** (liveness) | Cegah absen pakai foto HP atau video |
-| Berada **di dalam radius sekolah** | Cegah absen dari rumah |
-| **Dalam jam absen** | Cegah absen kapan saja |
-| **Belum absen hari ini** untuk tipe itu | Cegah absen dobel |
+### 1. Requirements
+- PHP 8.1+ (Laragon recommended on Windows)
+- MySQL 5.7+ / MariaDB 10.3+
+- Docker Desktop (for Zetaris)
+- Python 3.10+ (for agent, optional)
 
-Tiga hal yang jadi>**tidak bisa ditawar** dan membentuk seluruh arsitektur:
-
-1. **Server yang memutuskan, bukan HP.** Semua angka yang dikirim browser
-   (descriptor wajah, koordinat GPS, skor liveness) diperlakukan sebagai klaim
-   yang harus dihitung ulang di server. Hasil di layar HP cuma untuk tampilan.
-2. **Foto wajah tidak pernah disimpan.** Yang disimpan hanya descriptor
-   128 float (512 byte) — angka, bukan gambar. Lihat
-   [alasan teknis](#kenapa-foto-wajah-tidak-disimpan).
-3. **Bukti jejak audit.** Setiap kegagalan dan setiap pencatatan presensi
-   masuk tabel `audit_log` dengan alasan yang bisa dibaca.
-
----
-
-## 2. Cara kerja (alur nyata)
-
-```
-Siswa buka /siswa/scan-absen.php
-  │
-  ├─ bukaKamera()  +  loadModels()      ← jalan BERIRINGAN, bukan berurutan
-  │     (getUserMedia + unduh model ~6MB sekaligus)
-  │
-  ├─ POST /api/v1/attendance/scan-nonce.php
-  │     server memilih acak 2 challenge dari 6, terbitkan token sekali pakai
-  │
-  ├─ liveness: kedip mata (wajib) + 2 challenge acak
-  │     client kirim daftar challenge yang DIBENARKAN server
-  │
-  ├─ scan-engine: descriptor 128 float + koordinat GPS dikirim
-  │
-  └─ POST /api/v1/attendance/scan-check.php
-        1. metode + Content-Type
-        2. sesi siswa
-        3. rate limit scan        (3 percobaan gagal lalu terkunci)
-        4. token anti-replay      (sekali pakai, TTL 120 dtk)
-        5. validasi bentuk descriptor
-        6. Cocokkan wajah  ← OTORITATIF
-        7. Verifikasi lokasi ← OTORITATIF
-        8. jadwal absen
-        9. anti duplikat
-       10. tulis attendance + audit_log
+### 2. Clone & setup
+```bash
+git clone https://github.com/rizllxyzz/Presensi-School-App.git
+cd Presensi-School-App
+cp .env.example .env
 ```
 
-Langkah 6 dan 7 diulang di server dengan rumus yang sama persis dengan
-yang dipakai browser. Keduanya harus selalusinkron — kalau tidak, ambang
-0,55 berlaku di satu tempat saja dan sistem bocor.
-
----
-
-## 3. Aturan keras (tidak boleh dilanggar)
-
-Baris ini tidak bisa ditawar. Mengubah salah satunya berarti membatalkan
-alasan seluruh sistem.
-
-### 3.1 Server harus tetap otoritatif
-- **Dilarang** menerima keputusan final dari nilai yang dikirim klien tanpa
-  dihitung ulang. `descriptor`, `gps`, `liveness` = klaim, bukan fakta.
-- Pencocokan wajah **wajib** mengiterasi galeri di server
-  (`face_templates` dengan `is_centroid = 1`), bukan menerima
-  `userId` dari klien.
-- Lokasi **wajib** dihitung ulang dengan `verify_location()`.
-
-### 3.2 Jangan simpan foto wajah
-- **Tidak boleh** ada kode yang menulis PNG/JPEG hasil kamera ke `uploads/`
-  atau ke mana pun. Descriptor sudah cukup untuk pencocokan.
-- `uploads/` ada hanya sebagai pagar (`ref-faces/`, `temp-captures/` masih
-  ada tapi **tidak dipakai**). Jangan hapus `uploads/.htaccess`.
-
-### 3.3 Rumus pencocokan harus identik di PHP dan JS
-- Metrik adalah **jarak EUCLID** (`sqrt(sum((a-b)^2))`), **bukan** cosine.
-  Cosine salah dan diam-diam menggeser ambang batas.
-- `face_distance()` di `config/helper.php` dan `distanceToRow()` /
-  `match()` di `assets/js/scan-engine.js` harus selalu mengimplementasikan
-  rumus yang sama.
-- Keyakinan = `1 - (jarak / ambang)`, dibulatkan 4 desimal.
-- Panjang descriptor tetap **128**. Yang mengubahnya harus mengubah
-  `FACE_DESCRIPTOR_SIZE` **dan** galeri (yang harus diDaftar ulang dari nol).
-
-### 3.4 Ambang tidak boleh dinaikkan asal
-- `FACE_MATCH_THRESHOLD` (0.55) = jarak Euclid maksimum, tidak boleh diubah
-  tanpa mengukur ulang jarak pada sampel wajah **asli**.
-- `FACE_MIN_CONFIDENCE` (0.20) mencegah orang yang sangat mirip lolos dengan keyakinan
-  rendah. **Naikkan** `FACE_MIN_CONFIDENCE` → jarak efektif mengecil →
-  hampir semua siswa ditolak. Turunkan sedikit kalau hanya ingin sedikit
-  longgar, jangan naikkan.
-- `FACE_MATCH_STRICT` (0.45) juga dipakai sebagai `FACE_ENROLL_MAX_SPREAD`.
-  Ada **satu** angka penentu "seberapa mirip dua capture dianggap orang
-  yang sama" — jangan duplikasi angka ini di tempat lain.
-
-### 3.5 Anti-replay
-- Setiap scan memakai token sekali pakai dari `scan-nonce.php`,
-  TTL `SCAN_NONCE_TTL` (120 detik), ditandatangani `API_FINGERPRINT_KEY`.
-- Token **wajib** consume saat dipakai, walau validasi selanjutnya gagal.
-- Endpoint nonce dibatasi `NONCE_MAX_PER_WINDOW` (10/60 dtk) supaya satu
-  akun tidak meminta token tanpa henti.
-
-### 3.6 Liveness
-- Daftar challenge yang sah ada **hanya** di
-  `LIVENESS_CHALLENGES` (`config/app-config.php`) **dan** harus cocok dengan
-  `Liveness.runChallenge()` di `assets/js/liveness-detection.js`.
-- Server **memilih acak**, klien tidak boleh menentukan sendiri.
-- Klien **wajib** menyertakan daftar challenge yang dikirim server pada
-  `liveness.challenges`; server menolak challenge tak dikenal
-  (`LIVENESS_FAKE`).
-- `blink` **bukan** challenge acak — itu tahap pasif selalu jalan sebelum
-  challenge. Jangan taruh di `LIVENESS_CHALLENGES`.
-- Catatan jujur: verifikasi liveness saat ini hanya berjalan di sisi klien,
-  jadi ini kenaikan modalitas, bukan jaminan. Pengaman sesungguhnya ada
-  pada pencocokan server + lokasi + jadwal.
-
-### 3.7 Cakupan akses (role)
-| Peran | Boleh |
-|---|---|
-| `siswa` | scan, daftar wajah (dengan syarat), lihat miliknya |
-| `guru` | dashboard admin |
-| `admin` | semua, termasuk uji akurasi |
-
-- `admin/uji-akurasi.php` **wajib** dibatasi `admin`. Ia adalah alat
-  diagnosa, bukan untuk siswa.
-- `get-descriptors.php` dengan `scope=all` **hanya** untuk admin; siswa
-  hanya boleh `scope=self` (HP 403).
-- **Jangan** sediakan halaman daftar akun publik. Akun dibuat admin.
-
-### 3.8 Privasi
-- Halaman uji akurasi **tidak boleh** menyentuh endpoint presensi dan
-  **tidak boleh** menyimpan foto. Hanya ukur descriptor di memori.
-- Koordinat GPS **jangan** pernah ditulis ke HTML halaman scan
-  (cegah kebocoran lewat DOM).
-
----
-
-## 4. Kenapa foto wajah tidak disimpan
-
-Foto wajah adalah data pribadi paling sensitif, dan **tidak pernah dibutuhkan**
-untuk pencocokan. Yang dibutuhkan hanya descriptor 128 float.
-
-Kalau suatu saat kamu merasa "kita perlu simpan foto", **berhenti dan
-tanyakan ulang** — kemungkinan besar yang sebenarnya dibutuhkan adalah
-thumbnail untuk UI, dan itu bisa dari kamera saat itu juga, bukan disimpan.
-
----
-
-## 5. Struktur folder
-
+### 3. Database
+Import `database.sql` into MySQL:
+```bash
+mysql -u root -p presensi < database.sql
 ```
-laragon/www/                    ← document root Apache
-├── index.php                   entry point → login
-├── .htaccess                   security headers, blokir config/, dsb
-├── database.sql                skema MySQL (referensi; aktif pakai SQLite)
-├── install.php
-│
-├── config/                     ⚙️  backend & aturan main
-│   ├── app-config.php          KONSTANTA semua ambang & jadwal
-│   ├── database.php            koneksi PDO (SQLite/MySQL), db_now/db_now_sql
-│   └── helper.php              face_distance, verify_location, nonce, throttle, audit
-│
-├── auth/                       🔐  sesi, login, logout, CSRF
-│   ├── session.php             start_session, current_user, require_login, csrf_*
-│   ├── login.php
-│   └── logout.php
-│
-├── api/v1/                     🔌  endpoint JSON (authoritative)
-│   ├── attendance/
-│   │   ├── scan-nonce.php      terbitkan token + challenge acak
-│   │   └── scan-check.php      SATU-SATUNYA tempat memutuskan hadir
-│   └── student/
-│       ├── get-descriptors.php  galeri (scope dibatasi peran)
-│       └── register-face.php    daftar wajah (pakai sample + centroid)
-│
-├── assets/
-│   ├── js/
-│   │   ├── scan-engine.js      muat model, deteksi, kumpulkan descriptor, match
-│   │   ├── liveness-detection.js kedip + challenge dari server
-│   │   ├── gps-verifier.js     haversine, plausibilitas, anti-fake
-│   │   ├── app.js              alur UI scan siswa
-│   │   ├── uji-akurasi.js      alur UI uji admin
-│   │   └── uji-akurasi-math.js statistik + saran ambang
-│   └── css/                    app, kamera, uji akurasi
-│
-├── admin/                      🛠️  dashboard admin/guru + uji akurasi
-├── siswa/                      🎒  scan absen siswa
-├── database/                   💾 presensi.sqlite (file .sqlite)
-├── uploads/                    🚫 pagar, tidak dipakai
-└── vendor/
+Or use phpMyAdmin → Import → `database.sql`.
+
+### 4. Configure `.env`
+Edit `.env`:
+```
+DB_DRIVER=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=presensi
+DB_USER=root
+DB_PASS=
+ZETARIS_REST_URL=http://127.0.0.1:8888/api/v1.0
+ZETARIS_ORG_ID=1
+ZETARIS_API_KEY=your-zetaris-api-key
 ```
 
----
+### 5. Run
+Start Laragon (Apache + MySQL), then open http://localhost.
 
-## 6. Konfigurasi kunci (`config/app-config.php`)
+Default admin: `admin` / (set during install).
 
-Semua angka yang bisa diubah liegen di satu file. **Nilai default saat ini
-adalah untuk_skema, bukan data produksi** — ganti sebelum dipakai sungguhan.
+## Zetaris Setup (Data Layer)
+Zetaris virtualizes the presensi database so the agent can query it via REST.
 
-| Konstanta | Nilai | Arti |
-|---|---|---|
-| `FACE_MATCH_THRESHOLD` | `0.55` | jarak Euclid maksimum |
-| `FACE_MATCH_STRICT` | `0.45` | verifikasi 1:1 saat pendaftaran |
-| `FACE_MIN_CONFIDENCE` | `0.20` | lantai keyakinan |
-| `FACE_ENROLL_MAX_SPREAD` | = STRICT | sebaran antar-sampel saat daftar |
-| `FACE_SAMPLE_COUNT` / `..._MAX_SAMPLES` | `5` | sampel per pendaftaran |
-| `FACE_DESCRIPTOR_SIZE` | `128` | dimensi descriptor |
-| `LIVENESS_REQUIRED` | `2` | challenge yang harus dipenuhi |
-| `JAM_MASUK` | `06:30`–`08:00` | window absen pagi |
-| `JAM_PULANG` | `14:30`–`17:00` | window absen siang |
-| `TOLERANSI_TELAT_MENIT` | `15` | lewat ini ditandai `is_late` |
-| `SEKOLAH_RADIUS_M` | `100` | radius absen (dari tabel `lokasi_sekolah`) |
-| `GPS_MAX_ACCURACY_M` | `50` | akurasi GPS maksimum |
-| `MAX_SCAN_ATTEMPTS` | `3` | gagal scan sebelum terkunci |
-| `SCAN_NONCE_TTL` | `120` | masa pakai token scan |
-| `TIMEZONE` | `Asia/Jakarta` | zona waktu aplikasi |
+1. Install Docker Desktop.
+2. Download `zetaris-platform.zip` from Zetaris Cloud → extract to home folder.
+3. Login to registry:
+   ```bash
+   echo 'YOUR_REGISTRY_PASSWORD' | docker login zetarishackathon.azurecr.io -u zethackuser3dbe7753d420477084dff345823c738f --password-stdin
+   ```
+4. Configure `.env` in zetaris-platform (minimal RAM):
+   ```
+   ZSPARK_DRIVER_MEM=1g
+   ZSPARK_DRIVER_CORES=1
+   ZSPARK_MASTER_URL=local[1]
+   ZETARIS_API_MAX_HEAP=512m
+   ```
+5. Run:
+   ```bash
+   cd zetaris-platform
+   docker compose pull
+   docker compose up -d
+   ```
+6. Open http://localhost:3000 → login `admin@zetaris.com` / `Zetaris1@`.
+7. Create an API key (Profile → API Keys) → copy it.
+8. Set `ZETARIS_API_KEY` in this project's `.env`.
+9. Test: http://localhost/admin/zetaris.php?test=1 → "Terhubung".
 
-> **Peringatan timezone:** `db_now()` (nilai PHP) dan `db_now_sql()`
-> (ekspresi SQL) **harus menghasilkan waktu yang sama**. `datetime('now')`
-> di SQLite itu **UTC**, sedangkan aplikasi memakai `Asia/Jakarta`.
-> Karena itu `db_now_sql()` menambahkan offset `date('P')`. Kalau kamu
-> "", ubah `db_now_sql()` sehingga tetap konsisten.
+## Meterless Nightshift Setup (Primary AI Provider)
+Nightshift provides the LLM gateway (Nemotron) for SmartJournal AI.
 
-> **`API_FINGERPRINT_KEY` masih placeholder.** Untuk produksi:
-> `bin2hex(random_bytes(32))`.
+1. Download Nightshift from https://meterless.ai → install.
+2. Create a free NVIDIA API key at https://build.nvidia.com/models.
+3. In Nightshift → Providers → NVIDIA → paste key → Save.
+4. Configure a lane with a Nemotron model (e.g. `nvidia/nemotron-3.5-lightning-30b-a3b`).
+5. Open Nightshift Console → copy Runtime URL (e.g. `http://127.0.0.1:8088/v1`) and token.
+6. Set in this project's `.env`:
+   ```
+   MODEL_BASE_URL=http://127.0.0.1:8088/v1
+   MODEL_API_KEY=your-nightshift-runtime-token
+   NEMOTRON_MODEL=meterless/auto
+   ```
+7. In admin panel → "Koneksi AI" → enable and pick provider (or use Nightshift as custom OpenAI-compatible).
 
----
+## AI Provider Configuration (Admin)
+Admins can connect any OpenAI-compatible provider without editing code:
+- Go to `/admin/ai-provider.php` (menu: Koneksi AI).
+- Pick provider: OpenAI, Gemini, OpenRouter, Groq, Ollama, or Custom.
+- Set base URL, model, API key, enable.
+- Saved to `.env`. SmartJournal AI will use it as chatbot.
 
-## 7. Skema database (SQLite aktif)
+## Agent (Python)
+The Python agent lives in the separate repo:
+https://github.com/rizllxyzz/Attendance-Agent
 
-`database/presensi.sqlite`. Referensi MySQL ada di `database.sql`.
-
-| Tabel | Isi | Catatan |
-|---|---|---|
-| `users` | akun | `role`, `login_attempts`, `locked_until`, `last_login` |
-| `kelas` | kelas | `wali_kelas` → `users.id` |
-| `lokasi_sekolah` | titik & radius GPS | `is_active=1` dipakai |
-| `face_templates` | descriptor wajah | `is_centroid=1` yang dicocokkan; BLOB 512 byte |
-| `attendance` | catatan presensi | 20 kolom termasuk `face_distance`, `gps_verdict` |
-| `scan_nonces` | token sekali pakai | anti-replay |
-| `audit_log` | jejak audit | `event_type`, `severity` |
-| `device_log` | sidik jari perangkat | untuk deteksi penyimpangan |
-| `pengaturan` | key-value | konfigurasi runtime |
-
----
-
-## 8. Kebutuhan & menjalankan
-
-| Komponen | Versi | Catatan |
-|---|---|---|
-| PHP | 8.3 | ext: `pdo_sqlite` (atau `pdo_mysql`), `json`, `mbstring`, `gd` |
-| Server | Apache 2.4 | `mod_rewrite`, `mod_headers`, `mod_expires` |
-| DB | SQLite | file di `database/presensi.sqlite` |
-
-### Kamera butuh HTTPS
-`getUserMedia` (kamera) dan `navigator.geolocation` (GPS) **tidak jalan di
-HTTP biasa**. Untuk mencoba dari HP:
-- pakai **ngrok** (`ngrok http 80`) → HTTPS otomatis, atau
-- Chrome Android `chrome://flags/#unsafely-treat-insecure-origin-as-secure`.
-
-### Model dari CDN
-face-api.js dan bobot model diambil dari jsDelivr
-(`@vladmandic/face-api@1.7.15`). Yang dikirim ke CDN hanya library dan
-model — **foto dan descriptor wajah tidak pernah ke sana**; deteksi jalan
-di browser.
-
----
-
-## 9. Cara menguji perubahan
-
-Skrip uji ada di `C:\Users\Advan\AppData\Local\Temp\presensi-test\`.
-
-```powershell
-# suite penuh
-& "$env:TEMP\presensi-test\all.ps1"
+Run:
+```bash
+cd Attendance-Agent
+pip install -r requirements.txt
+cp .env.example .env   # fill Zetaris + Nightshift settings
+python run.py           # live mode
+SAMPLE_MODE=true python run.py  # sample mode (no credentials)
 ```
 
-Yang diuji: descriptor validation, negatif/anti-replay/rate-limit,
-liveness, batas penerbitan nonce, alur sukses, mesin scan, matematika uji
-akurasi, halaman scan, endpoint descriptor + daftar wajah.
+Endpoint: `POST http://localhost:8000/run` with `{"task": "..."}`.
 
----
+## Sponsor Technology
+- **Zetaris**: data layer. Agent queries real attendance data via REST `run_sql`. See `config/zetaris.php`.
+- **Meterless Nightshift**: primary AI provider (OpenAI-compatible). See `agent/adapters/nightshift.py` (in agent repo) and admin AI provider page.
+- **Meterless Engine**: Scout Intent classifies query intent for routing (`app/engines/scout_intent.py`).
+- **NVIDIA**: Nemotron models routed through Nightshift.
+- **Cursor**: optional AI coding tool.
 
-## 10. Kalau kamu AI dan diminta mengubah apa pun
+## Project Structure
+```
+/                # PHP app (presensi)
+├── admin/       # Admin panel
+├── api/v1/      # REST endpoints (incl. agent/ask.php)
+├── assets/      # CSS/JS
+├── config/      # app-config, database, zetaris, agent-config
+├── siswa/       # Student portal
+├── templates/   # head/foot
+└── agent/       # TS agent (HMEM) + NASKAH-VIDEO removed
+```
 
-1. Baca `README.md` ini sampai habis.
-2. Baca `README.md` di folder yang akan kamu ubah.
-3. **Jangan** mengubah `config/app-config.php` kecuali diminta.
-4. Kalau kamu menambah endpoint atau halaman baru, ikuti pola yang sudah
-   ada: `declare(strict_types=1)`, `require_once` dari `session.php`/
-   `database.php`, validasi peran **sebelum** logika bisnis, prepared
-   statement, dan `audit_log()` untuk kejadian penting.
-5. Setelah mengubah, jalankan suite uji di atas dan pastikan tetap hijau.
-6. Kalau kamu tidak yakin sebuah angka, **jangan** mengarang angka baru —
-   baca lagi konstanta yang relevan dan tulis alasannya.
+## Limitations
+- Face ID requires HTTPS or localhost (browser camera API).
+- GPS verification is heuristic, not absolute.
+- Sample mode uses cached data, not live queries.
 
----
-
-## 11. Yang **tidak** ada (jangan cari-cari)
-
-Dulu README versi lama menyebut file-file ini. **Tidak pernah ada di
-build sekarang** — jangan buat, jangan rujuk:
-
-`register.php` (publik) · `admin/kelola-siswa.php` ·
-`admin/register-wajah-siswa.php` · `admin/kelola-kelas.php` ·
-`admin/rekap-absensi.php` · `admin/pengaturan-lokasi.php` ·
-`admin/log-audit.php` · `siswa/riwayat.php` · `api/v1/auth/login.php` ·
-`api/v1/attendance/history.php` · `api/v1/export/*` ·
-`templates/header.php` · `assets/models/*` (lokal) ·
-foto di `uploads/` · konstanta `JWT_SECRET` · `MODEL_PATH` ·
-`FINGERPRINT_PATH`.
-
-Also, nama database: **SQLite**, bukan MySQL. Dan metrik pencocokan:
-**Euclid**, bukan cosine.
+## License
+MIT. Free to use, modify, and distribute.

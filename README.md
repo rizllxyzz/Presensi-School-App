@@ -1,9 +1,22 @@
 # Presensi School - Smart Attendance System
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4?logo=php)](https://php.net)
+[![MySQL](https://img.shields.io/badge/MySQL-5.7%2B-4479A1?logo=mysql)](https://mysql.com)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker)](Dockerfile)
+[![Hackathon](https://img.shields.io/badge/Open%20Agent%20Hackathon-2026-orange)](https://hackathon.genai.works)
+
 A school attendance (presensi) web app with Face ID, GPS verification, and an
 AI assistant (SmartJournal AI) powered by **Zetaris** and **Meterless Nightshift**.
 
 > Open-source. Feel free to fork, modify, and contribute.
+
+## Screenshots
+
+![Dashboard](assets/screenshot-dashboard.png)
+![Agent Chat](assets/screenshot-agent.png)
+
+> Place screenshot files in `assets/` (e.g. `screenshot-dashboard.png`).
 
 ## Tech Stack
 - PHP 8.3 + MySQL (Laragon/XAMPP)

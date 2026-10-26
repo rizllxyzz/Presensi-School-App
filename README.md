@@ -33,26 +33,25 @@ mysql -u root -p presensi < database.sql
 ```
 Or use phpMyAdmin → Import → `database.sql`.
 
-### 4. Data demo absensi (opsional)
-Untuk langsung mengisi presensi **semua siswa aktif** selama sebulan penuh
-(hari kerja, masuk + pulang), jalankan:
+### 4. Demo attendance data (optional)
+To fill attendance for **all active students** for a full month
+(weekdays, check-in + check-out), run:
 
 ```bash
 php seed_absensi.php
 ```
 
-Bawaan: tanggal 1 bulan lalu sampai hari ini. Bisa juga dipilih:
+Default: from the 1st of last month to today. You can also choose:
 
 ```bash
 php seed_absensi.php --month=2026-09
 php seed_absensi.php --from=2026-09-01 --to=2026-10-26
-php seed_absensi.php --dry-run     # cek jumlah tanpa menulis
+php seed_absensi.php --dry-run     # count only, no writes
 ```
 
-Atau login sebagai admin lalu buka `http://localhost/seed_absensi.php`.
-Skrip hanya menambah baris yang belum ada — data lama tidak dihapus dan
-tidak diubah. Hapus file tersebut setelah data dirasa cukup bila aplikasi
-dipakai di server publik.
+Or log in as admin and open `http://localhost/seed_absensi.php`.
+The script only adds missing rows — existing data is not deleted or changed.
+Delete this file once the demo data is sufficient if deployed publicly.
 
 ### 5. Configure `.env`
 Edit `.env`:

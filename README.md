@@ -33,7 +33,28 @@ mysql -u root -p presensi < database.sql
 ```
 Or use phpMyAdmin → Import → `database.sql`.
 
-### 4. Configure `.env`
+### 4. Data demo absensi (opsional)
+Untuk langsung mengisi presensi **semua siswa aktif** selama sebulan penuh
+(hari kerja, masuk + pulang), jalankan:
+
+```bash
+php seed_absensi.php
+```
+
+Bawaan: tanggal 1 bulan lalu sampai hari ini. Bisa juga dipilih:
+
+```bash
+php seed_absensi.php --month=2026-09
+php seed_absensi.php --from=2026-09-01 --to=2026-10-26
+php seed_absensi.php --dry-run     # cek jumlah tanpa menulis
+```
+
+Atau login sebagai admin lalu buka `http://localhost/seed_absensi.php`.
+Skrip hanya menambah baris yang belum ada — data lama tidak dihapus dan
+tidak diubah. Hapus file tersebut setelah data dirasa cukup bila aplikasi
+dipakai di server publik.
+
+### 5. Configure `.env`
 Edit `.env`:
 ```
 DB_DRIVER=mysql
@@ -47,7 +68,7 @@ ZETARIS_ORG_ID=1
 ZETARIS_API_KEY=your-zetaris-api-key
 ```
 
-### 5. Run
+### 6. Run
 Start Laragon (Apache + MySQL), then open http://localhost.
 
 Default admin: `admin` / (set during install).

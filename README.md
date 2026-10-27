@@ -14,19 +14,19 @@ AI assistant (SmartJournal AI) powered by **Zetaris** and **Meterless Nightshift
 ## Screenshots
 
 ### Admin Dashboard
-![Admin Dashboard](assets/admin-dashboard.png)
+![Admin Dashboard](https://raw.githubusercontent.com/rizllxyzz/Presensi-School-App/main/assets/admin-dashboard.png)
 
 ### SmartJournal AI Assistant
-![SmartJournal AI](assets/smartjournal-ai.png)
+![SmartJournal AI](https://raw.githubusercontent.com/rizllxyzz/Presensi-School-App/main/assets/smartjournal-ai.png)
 
 ### Face ID Verification
-![Face ID](assets/face-id.png)
+![Face ID](https://raw.githubusercontent.com/rizllxyzz/Presensi-School-App/main/assets/face-id.png)
 
 ### Admin Login Page
-![Admin Login](assets/login-admin.png)
+![Admin Login](https://raw.githubusercontent.com/rizllxyzz/Presensi-School-App/main/assets/login-admin.png)
 
 ### Mobile Responsive View
-![Dashboard Mobile](assets/dashboard-mobile.png)
+![Dashboard Mobile](https://raw.githubusercontent.com/rizllxyzz/Presensi-School-App/main/assets/dashboard-mobile.png)
 
 ## Tech Stack
 - PHP 8.3 + MySQL (Laragon/XAMPP)

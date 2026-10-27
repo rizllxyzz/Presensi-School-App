@@ -13,10 +13,20 @@ AI assistant (SmartJournal AI) powered by **Zetaris** and **Meterless Nightshift
 
 ## Screenshots
 
-![Dashboard](assets/screenshot-dashboard.png)
-![Agent Chat](assets/screenshot-agent.png)
+### Admin Dashboard
+![Admin Dashboard](assets/admin-dashboard.png)
 
-> Place screenshot files in `assets/` (e.g. `screenshot-dashboard.png`).
+### SmartJournal AI Assistant
+![SmartJournal AI](assets/smartjournal-ai.png)
+
+### Face ID Verification
+![Face ID](assets/face-id.png)
+
+### Admin Login Page
+![Admin Login](assets/login-admin.png)
+
+### Mobile Responsive View
+![Dashboard Mobile](assets/dashboard-mobile.png)
 
 ## Tech Stack
 - PHP 8.3 + MySQL (Laragon/XAMPP)
@@ -173,6 +183,40 @@ Endpoint: `POST http://localhost:8000/run` with `{"task": "..."}`.
 - Face ID requires HTTPS or localhost (browser camera API).
 - GPS verification is heuristic, not absolute.
 - Sample mode uses cached data, not live queries.
+
+## Examples (Agent I/O)
+
+### Example 1 - Greeting
+**Input**
+```json
+{"question": "Halo"}
+```
+**Output**
+```json
+{"mode": "model", "provider": "nightshift-meterless+nvidia-nemotron", "answer": "Hai! Ada yang bisa saya bantu hari ini seputar data presensi dan kehadiran siswa School?"}
+```
+
+### Example 2 - Late students
+**Input**
+```json
+{"question": "Siapa saja siswa yang terlambat hari ini?"}
+```
+**Output**
+```json
+{"mode": "model", "provider": "nightshift-meterless+nvidia-nemotron", "answer": "Tidak ada siswa yang terlambat..."}
+```
+
+### Example 3 - Attendance recap
+**Input**
+```json
+{"question": "Ringkas kehadiran hari ini."}
+```
+**Output**
+```json
+{"mode": "model", "provider": "SmartJournal AI · Zetaris Engine", "answer": "Rekapitulasi Presensi Sekolah ..."}
+```
+
+More examples and traces: see [Attendance-Agent](https://github.com/rizllxyzz/Attendance-Agent) (`input_examples/`, `output_examples/`, `logs/`).
 
 ## License
 MIT. Free to use, modify, and distribute.
